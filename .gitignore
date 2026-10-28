@@ -1,0 +1,61 @@
+# Local environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Virtual environments
+.venv/
+.venv-win/
+venv/
+env/
+
+# Python-generated files and test/tool caches
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.hypothesis/
+.coverage*
+htmlcov/
+junit.xml
+coverage.xml
+
+# Local application data and generated files
+instance/
+*.log
+
+# Local database files and compressed/dedicated database dumps.
+# Keep source schema files such as setup_db.sql trackable.
+*.db
+*.sqlite
+*.sqlite3
+*.mdb
+*.accdb
+*.dump
+*.dump.sql
+*_dump.sql
+*-dump.sql
+*.sql.gz
+*.sql.zip
+
+# Private keys and local credential stores
+*.pem
+*.key
+*.p12
+*.pfx
+*.ppk
+id_rsa
+id_ed25519
+credentials.json
+credentials.yml
+credentials.yaml
+.aws/
+.ssh/
+
+# Existing IDE-specific exclusions
+.idea/
+.vscode/

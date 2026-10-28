@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Inventory{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+  <div><p class="eyebrow mb-1">INVENTORY</p><h1 class="page-title mb-1">Assets</h1><p class="text-secondary mb-0">{{ assets.total }} registered asset(s)</p></div>
+  <div class="d-flex gap-2">
+    {% if current_user.role == 'IT Manager' %}<a class="btn btn-outline-secondary" href="{{ url_for('allocations.assign') }}">Assign asset</a>{% endif %}
+    {% if current_user.role in ['Admin', 'IT Manager'] %}<a class="btn btn-primary" href="{{ url_for('assets.create') }}">＋ Register asset</a>{% endif %}
+  </div>
+</div>
+<section class="panel mb-4">
+  <div class="panel-heading"><form class="row g-2 flex-grow-1" method="get">
+    <div class="col-md-7"><input class="form-control" name="q" value="{{ query }}" placeholder="Search tag, serial, model, vendor…"></div>
+    <div class="col-md-3"><select class="form-select" name="status"><option value="">All statuses</option>{% for item in ['Available','Assigned','In_Repair','Under_Maintenance','Retired'] %}<option value="{{ item }}" {% if status == item %}selected{% endif %}>{{ item|replace('_',' ') }}</option>{% endfor %}</select></div>
+    <div class="col-md-2 d-grid"><button class="btn btn-outline-primary">Filter</button></div>
+  </form></div>
+  {% include "assets/_table.html" %}
+  {% if assets.pages > 1 %}<nav class="p-3" aria-label="Inventory pages"><ul class="pagination pagination-sm mb-0 justify-content-end">{% for page in assets.iter_pages() %}{% if page %}<li class="page-item {% if page == assets.page %}active{% endif %}"><a class="page-link" href="{{ url_for('assets.index', page=page, q=query, status=status) }}">{{ page }}</a></li>{% else %}<li class="page-item disabled"><span class="page-link">…</span></li>{% endif %}{% endfor %}</ul></nav>{% endif %}
+</section>
+<section class="panel">
+  <div class="panel-heading"><div><h2 class="h6 mb-0">Import assets from CSV</h2><p class="small text-secondary mb-0">Imports are all-or-nothing if any row is invalid.</p></div></div>
+  {% if current_user.role == 'IT Manager' %}<form class="p-3 d-flex flex-wrap gap-2" method="post" enctype="multipart/form-data" action="{{ url_for('assets.import_csv') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input class="form-control" style="max-width:420px" type="file" name="file" accept=".csv,text/csv" required><button class="btn btn-outline-primary">Upload CSV</button>
+    <span class="small text-secondary align-self-center">Required columns: asset_tag, serial_number, category, manufacturer, model, purchase_date, purchase_cost, salvage_value, useful_life_years</span>
+  </form>{% endif %}
+</section>
+{% endblock %}

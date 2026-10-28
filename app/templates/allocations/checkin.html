@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Record return{% endblock %}
+{% block content %}
+<div class="mb-4"><a class="small text-decoration-none" href="{{ url_for('assets.detail', asset_id=allocation.asset_id) }}">← {{ allocation.asset.asset_tag }}</a><p class="eyebrow mt-3 mb-1">CUSTODY CHECK-IN</p><h1 class="page-title">Record asset return</h1><p class="text-secondary">{{ allocation.asset.asset_tag }} returned by {{ allocation.employee.full_name }}.</p></div>
+<form class="panel p-4" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="mb-3"><label class="form-label" for="condition">Return condition</label><select class="form-select" name="condition" id="condition" required><option value="">Select condition…</option><option>Good</option><option>Damaged</option><option>Defective</option></select><div class="form-text">Good returns to Available; Damaged or Defective moves to In Repair.</div></div>
+  <div class="mb-4"><label class="form-label" for="notes">Inspection notes</label><textarea class="form-control" name="notes" id="notes" rows="4"></textarea></div><button class="btn btn-primary">Save inspected return</button>
+</form>
+{% endblock %}

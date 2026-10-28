@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit asset' if asset else 'Register asset' }}{% endblock %}
+{% block content %}
+<div class="mb-4"><a class="small text-decoration-none" href="{{ url_for('assets.index') }}">← Inventory</a><p class="eyebrow mt-3 mb-1">ASSET RECORD</p><h1 class="page-title">{{ 'Edit ' ~ asset.asset_tag if asset else 'Register asset' }}</h1></div>
+<form class="panel p-4" method="post">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="row g-3">
+    {% for key, label, type in [('asset_tag','Asset tag','text'),('serial_number','Serial number','text'),('category','Category','text'),('manufacturer','Manufacturer','text'),('model','Model','text'),('vendor','Vendor','text'),('purchase_date','Purchase date','date'),('purchase_cost','Purchase cost','number'),('salvage_value','Salvage value','number'),('useful_life_years','Useful life (years)','number'),('warranty_expiry','Warranty expiry','date')] %}
+    <div class="col-md-6"><label class="form-label" for="{{ key }}">{{ label }}</label><input class="form-control" id="{{ key }}" name="{{ key }}" type="{{ type }}" {% if type == 'number' %}step="{{ '1' if key == 'useful_life_years' else '0.01' }}" min="0"{% endif %} value="{{ (asset|attr(key)) if asset and (asset|attr(key)) is not none else '' }}" {% if key != 'vendor' and key != 'warranty_expiry' %}required{% endif %}></div>
+    {% endfor %}
+    <div class="col-12"><label class="form-label" for="notes">Notes</label><textarea class="form-control" id="notes" name="notes" rows="3">{{ asset.notes if asset else '' }}</textarea></div>
+  </div>
+  <div class="d-flex gap-2 mt-4"><button class="btn btn-primary">{{ 'Save changes' if asset else 'Create asset' }}</button><a class="btn btn-light" href="{{ url_for('assets.index') }}">Cancel</a></div>
+</form>
+{% endblock %}

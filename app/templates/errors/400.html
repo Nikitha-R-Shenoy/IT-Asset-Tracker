@@ -1,0 +1,1 @@
+{% extends "base.html" %}{% block title %}Bad request{% endblock %}{% block content %}<div class="error-card"><span>400</span><h1>Bad request</h1><p>The submitted request could not be processed. Check your input and try again.</p><a class="btn btn-primary" href="{{ url_for('dashboard.index') }}">Return to dashboard</a></div>{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Log maintenance{% endblock %}
+{% block content %}
+<div class="mb-4"><a class="small text-decoration-none" href="{{ url_for('assets.detail', asset_id=asset.id) }}">← {{ asset.asset_tag }}</a><p class="eyebrow mt-3 mb-1">SERVICE RECORD</p><h1 class="page-title">Log maintenance</h1><p class="text-secondary">Recording maintenance moves this asset to Under Maintenance.</p></div>
+<form class="panel p-4" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="mb-3"><label class="form-label" for="issue_description">Issue description</label><textarea class="form-control" id="issue_description" name="issue_description" rows="4" required></textarea></div>
+  <div class="row g-3 mb-4"><div class="col-md-8"><label class="form-label" for="service_vendor">Service vendor</label><input class="form-control" id="service_vendor" name="service_vendor"></div><div class="col-md-4"><label class="form-label" for="repair_cost">Repair cost</label><input class="form-control" id="repair_cost" name="repair_cost" type="number" step="0.01" min="0" value="0" required></div></div>
+  <button class="btn btn-primary">Start maintenance</button>
+</form>
+{% endblock %}

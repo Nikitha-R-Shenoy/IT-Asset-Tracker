@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Assign asset{% endblock %}
+{% block content %}
+<div class="mb-4"><a class="small text-decoration-none" href="{{ url_for('allocations.index') }}">← Assignments</a><p class="eyebrow mt-3 mb-1">CUSTODY CHECK-OUT</p><h1 class="page-title">Assign an asset</h1><p class="text-secondary">Only available assets and active employees can be selected.</p></div>
+<form class="panel p-4" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="mb-3"><label class="form-label" for="asset_id">Available asset</label><select class="form-select" id="asset_id" name="asset_id" required><option value="">Select asset…</option>{% for asset in assets %}<option value="{{ asset.id }}" {% if request.args.get('asset_id', type=int) == asset.id %}selected{% endif %}>{{ asset.asset_tag }} — {{ asset.manufacturer }} {{ asset.model }} ({{ asset.serial_number }})</option>{% endfor %}</select></div>
+  <div class="mb-3"><label class="form-label" for="employee_id">Employee</label><select class="form-select" id="employee_id" name="employee_id" required><option value="">Select employee…</option>{% for employee in employees %}<option value="{{ employee.id }}">{{ employee.full_name }} — {{ employee.employee_number }} ({{ employee.department }})</option>{% endfor %}</select></div>
+  <div class="mb-4"><label class="form-label" for="notes">Checkout notes</label><textarea class="form-control" id="notes" name="notes" rows="3"></textarea></div>
+  <button class="btn btn-primary">Confirm assignment</button>
+</form>
+{% endblock %}

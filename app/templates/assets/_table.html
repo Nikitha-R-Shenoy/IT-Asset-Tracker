@@ -1,0 +1,7 @@
+<div class="table-responsive"><table class="table align-middle mb-0">
+  <thead><tr><th>Asset</th><th>Category</th><th>Model</th><th>Assigned to</th><th>Status</th><th></th></tr></thead>
+  <tbody>{% for asset in assets %}
+  {% set active = asset.allocations|selectattr('return_date', 'none')|first %}
+  <tr><td><a class="fw-semibold" href="{{ url_for('assets.detail', asset_id=asset.id) }}">{{ asset.asset_tag }}</a><div class="small text-secondary">{{ asset.serial_number }}</div></td><td>{{ asset.category }}</td><td>{{ asset.manufacturer }} {{ asset.model }}</td><td>{{ active.employee.full_name if active else '—' }}</td><td><span class="status-badge status-{{ asset.status|lower|replace('_', '-') }}">{{ asset.status|replace('_', ' ') }}</span></td><td class="text-end"><a class="btn btn-sm btn-light" href="{{ url_for('assets.detail', asset_id=asset.id) }}">Details</a></td></tr>
+  {% else %}<tr><td colspan="6" class="empty-state">No assets found.</td></tr>{% endfor %}</tbody>
+</table></div>

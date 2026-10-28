@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Assignments{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-end mb-4"><div><p class="eyebrow mb-1">CUSTODY</p><h1 class="page-title mb-1">Active assignments</h1><p class="text-secondary mb-0">Current employee custody of company equipment.</p></div>{% if current_user.role == 'IT Manager' %}<a class="btn btn-primary" href="{{ url_for('allocations.assign') }}">＋ Assign asset</a>{% endif %}</div>
+<section class="panel"><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Asset</th><th>Employee</th><th>Department</th><th>Checkout date</th><th></th></tr></thead><tbody>{% for item in allocations %}<tr><td><a class="fw-semibold" href="{{ url_for('assets.detail', asset_id=item.asset_id) }}">{{ item.asset.asset_tag }}</a><div class="small text-secondary">{{ item.asset.model }} · {{ item.asset.serial_number }}</div></td><td>{{ item.employee.full_name }}</td><td>{{ item.employee.department }}</td><td>{{ item.checkout_date.strftime('%Y-%m-%d') }}</td><td><a class="btn btn-sm btn-outline-primary" href="{{ url_for('allocations.return_item', allocation_id=item.id) }}">Record return</a></td></tr>{% else %}<tr><td colspan="5" class="empty-state">No active assignments.</td></tr>{% endfor %}</tbody></table></div></section>
+{% endblock %}

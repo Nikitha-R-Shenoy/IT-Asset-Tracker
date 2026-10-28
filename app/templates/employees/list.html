@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Employees{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4"><div><p class="eyebrow mb-1">PEOPLE DIRECTORY</p><h1 class="page-title mb-1">Employees</h1><p class="text-secondary mb-0">Manage active employees used as assignment targets.</p></div><a class="btn btn-primary" href="{{ url_for('employees.create') }}">＋ Add employee</a></div>
+<section class="panel">
+  <div class="panel-heading"><form class="d-flex gap-2 w-100" method="get"><input class="form-control" name="q" value="{{ query }}" placeholder="Search name, employee number, department"><button class="btn btn-outline-primary">Search</button></form></div>
+  <div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Employee</th><th>Employee number</th><th>Department / cost center</th><th>Account</th><th>Status</th><th></th></tr></thead><tbody>
+  {% for employee in employees %}<tr><td class="fw-semibold">{{ employee.full_name }}<div class="small text-secondary">{{ employee.email }}</div></td><td>{{ employee.employee_number }}</td><td>{{ employee.department }}<div class="small text-secondary">{{ employee.cost_center }}</div></td><td>{{ 'Enabled' if employee.user and employee.user.is_active else ('Not provisioned' if not employee.user else 'Disabled') }}</td><td><span class="status-badge {{ 'status-available' if employee.is_active else 'status-retired' }}">{{ 'Active' if employee.is_active else 'Inactive' }}</span></td><td><form method="post" action="{{ url_for('employees.toggle', employee_id=employee.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-outline-secondary">{{ 'Deactivate' if employee.is_active else 'Reactivate' }}</button></form></td></tr>
+  {% else %}<tr><td colspan="6" class="empty-state">No employees found.</td></tr>{% endfor %}
+  </tbody></table></div>
+</section>
+{% endblock %}

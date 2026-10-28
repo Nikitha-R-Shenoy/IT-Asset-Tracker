@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ asset.asset_tag }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+  <div><a class="small text-decoration-none" href="{{ url_for('assets.index') }}">← Inventory</a><p class="eyebrow mt-3 mb-1">{{ asset.category }}</p><h1 class="page-title mb-2">{{ asset.asset_tag }}</h1><span class="status-badge status-{{ asset.status|lower|replace('_','-') }}">{{ asset.status|replace('_',' ') }}</span></div>
+  <div class="d-flex flex-wrap gap-2">
+    {% if current_user.role == 'IT Manager' and asset.status == 'Available' %}<a class="btn btn-primary" href="{{ url_for('allocations.assign', asset_id=asset.id) }}">Assign</a>{% endif %}
+    {% if current_user.role == 'IT Manager' and asset.status not in ['Retired','Assigned'] %}<a class="btn btn-outline-primary" href="{{ url_for('maintenance.start', asset_id=asset.id) }}">Log maintenance</a>{% endif %}
+    {% if current_user.role == 'IT Manager' and asset.status != 'Retired' %}<a class="btn btn-outline-secondary" href="{{ url_for('assets.edit', asset_id=asset.id) }}">Edit</a>{% endif %}
+    {% if current_user.role in ['IT Manager', 'Admin'] and asset.status != 'Retired' %}<form method="post" action="{{ url_for('assets.retire', asset_id=asset.id) }}" onsubmit="return confirm('Retire this asset? Its history will be retained.');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-outline-danger">Retire</button></form>{% endif %}
+  </div>
+</div>
+<div class="row g-3 mb-4">
+  <div class="col-lg-8"><section class="panel p-4 h-100"><h2 class="h5 mb-3">Specifications</h2><div class="row g-3">
+    {% for label,value in [('Serial number',asset.serial_number),('Manufacturer / model',asset.manufacturer ~ ' ' ~ asset.model),('Vendor',asset.vendor or '—'),('Purchase date',asset.purchase_date),('Purchase cost',asset.purchase_cost),('Warranty expiry',asset.warranty_expiry or 'Not recorded'),('Useful life',asset.useful_life_years ~ ' years'),('Book value',book_value)] %}<div class="col-sm-6"><div class="detail-label">{{ label }}</div><div class="fw-medium">{{ value }}</div></div>{% endfor %}
+  </div>{% if asset.notes %}<hr><div class="detail-label">Notes</div><p class="mb-0">{{ asset.notes }}</p>{% endif %}</section></div>
+  <div class="col-lg-4"><section class="panel p-4 h-100"><h2 class="h5 mb-3">Lifecycle actions</h2>
+    {% set active = asset.allocations|selectattr('return_date', 'none')|first %}
+    {% if active %}<p class="small text-secondary mb-1">Currently assigned to</p><p class="fw-semibold">{{ active.employee.full_name }}</p><a class="btn btn-sm btn-outline-primary" href="{{ url_for('allocations.return_item', allocation_id=active.id) }}">Record return</a>{% else %}<p class="text-secondary">No active employee allocation.</p>{% endif %}
+    <p class="small text-secondary mt-4 mb-0">Created {{ asset.created_at.strftime('%Y-%m-%d') }}</p>
+  </section></div>
+</div>
+<section class="panel"><div class="panel-heading"><div><h2 class="h5 mb-0">Custody history</h2><p class="small text-secondary mb-0">All check-outs and condition-audited returns</p></div><a class="btn btn-sm btn-outline-secondary" href="{{ url_for('assets.history_csv', asset_id=asset.id) }}">Export CSV</a></div>
+  {% if history %}<div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Custodian</th><th>Checked out</th><th>Returned</th><th>Condition</th><th>Notes</th></tr></thead><tbody>{% for item in history %}<tr><td>{{ item.employee.full_name }}</td><td>{{ item.checkout_date.strftime('%Y-%m-%d %H:%M') }}</td><td>{{ item.return_date.strftime('%Y-%m-%d %H:%M') if item.return_date else 'Active' }}</td><td>{{ item.return_condition or '—' }}</td><td>{{ item.return_notes or item.checkout_notes or '—' }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty-state">No assignment history recorded.</div>{% endif %}
+</section>
+{% endblock %}

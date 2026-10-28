@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Add employee{% endblock %}
+{% block content %}
+<div class="mb-4"><a class="small text-decoration-none" href="{{ url_for('employees.index') }}">← Employees</a><p class="eyebrow mt-3 mb-1">PEOPLE DIRECTORY</p><h1 class="page-title">Add employee</h1></div>
+<form class="panel p-4" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="row g-3">
+    {% for key,label in [('employee_number','Employee number'),('first_name','First name'),('last_name','Last name'),('email','Work email'),('department','Department'),('cost_center','Department cost center')] %}<div class="col-md-6"><label class="form-label" for="{{ key }}">{{ label }}</label><input class="form-control" id="{{ key }}" name="{{ key }}" type="{{ 'email' if key == 'email' else 'text' }}" required></div>{% endfor %}
+    <div class="col-12"><hr><h2 class="h6">Employee account <span class="text-secondary fw-normal">(optional)</span></h2><p class="small text-secondary">If set, the password is stored as a PBKDF2-SHA256 hash. Provide the initial password securely to the employee.</p>
+      {% if current_user.role == 'Admin' %}<div class="mb-3"><label class="form-label" for="account_role">Account role</label><select class="form-select" id="account_role" name="account_role"><option>Employee</option><option>IT Manager</option></select></div>{% endif %}
+      <label class="form-label" for="password">Initial password (12+ characters)</label><input class="form-control" id="password" name="password" type="password" minlength="12" autocomplete="new-password"></div>
+  </div>
+  <div class="d-flex gap-2 mt-4"><button class="btn btn-primary">Create employee</button><a class="btn btn-light" href="{{ url_for('employees.index') }}">Cancel</a></div>
+</form>
+{% endblock %}

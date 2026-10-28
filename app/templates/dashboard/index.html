@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+  <div><p class="eyebrow mb-1">OVERVIEW</p><h1 class="page-title mb-1">Asset dashboard</h1><p class="text-secondary mb-0">Live snapshot of the organization's IT inventory.</p></div>
+  {% if current_user.role in ['Admin', 'IT Manager'] %}<a class="btn btn-primary" href="{{ url_for('assets.create') }}">＋ Register asset</a>{% endif %}
+</div>
+<div class="row g-3 mb-4">
+  {% for title, value, tone in [('Total assets', counts.total, 'navy'), ('Available', counts.available, 'green'), ('Assigned', counts.assigned, 'blue'), ('In maintenance', counts.maintenance, 'orange'), ('Retired', counts.retired, 'red')] %}
+  <div class="col-6 col-xl"><div class="metric-card"><span class="metric-label">{{ title }}</span><div class="metric-value text-{{ tone }}">{{ value }}</div></div></div>
+  {% endfor %}
+</div>
+<div class="row g-3 mb-4">
+  <div class="col-md-6"><a class="notice-card" href="{{ url_for('maintenance.requests_index') }}"><span class="notice-icon">↗</span><span><strong>{{ open_requests }} open service requests</strong><small>Review employee repair requests</small></span></a></div>
+  <div class="col-md-6"><a class="notice-card" href="{{ url_for('reports.index', type='warranty') }}"><span class="notice-icon warning">◷</span><span><strong>{{ expiring }} warranties expiring soon</strong><small>Expiring in the next 30 days</small></span></a></div>
+</div>
+<section class="panel">
+  <div class="panel-heading"><div><h2 class="h5 mb-1">Recently registered</h2><p class="text-secondary small mb-0">Latest additions to inventory</p></div><a href="{{ url_for('assets.index') }}" class="btn btn-sm btn-outline-secondary">View inventory</a></div>
+  {% include "assets/_table.html" %}
+</section>
+{% endblock %}

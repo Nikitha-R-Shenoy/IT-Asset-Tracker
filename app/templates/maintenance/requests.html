@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Service requests{% endblock %}
+{% block content %}
+<div class="mb-4"><p class="eyebrow mb-1">SERVICE DESK</p><h1 class="page-title mb-1">{{ 'Repair requests' if current_user.role == 'Employee' else 'Employee service requests' }}</h1><p class="text-secondary mb-0">Track hardware issues and their resolution.</p></div>
+{% if current_user.role == 'Employee' %}
+<form class="panel p-4 mb-4" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><h2 class="h5 mb-3">Submit a repair request</h2>
+  <div class="mb-3"><label class="form-label" for="asset_id">Assigned asset</label><select class="form-select" id="asset_id" name="asset_id" required><option value="">Select an assigned asset…</option>{% for asset in assigned_assets %}<option value="{{ asset.id }}">{{ asset.asset_tag }} — {{ asset.model }} ({{ asset.serial_number }})</option>{% endfor %}</select></div>
+  <div class="mb-3"><label class="form-label" for="description">Describe the issue</label><textarea class="form-control" id="description" name="description" rows="3" required></textarea></div><button class="btn btn-primary">Submit request</button>
+</form>
+{% endif %}
+<section class="panel"><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Asset</th><th>Employee</th><th>Issue</th><th>Submitted</th><th>Status / action</th></tr></thead><tbody>
+{% for item in requests %}<tr><td>{% if current_user.role == 'Employee' %}{{ item.asset.asset_tag }}{% else %}<a href="{{ url_for('assets.detail', asset_id=item.asset_id) }}">{{ item.asset.asset_tag }}</a>{% endif %}</td><td>{{ item.employee.full_name }}</td><td>{{ item.description }}{% if item.resolution_notes %}<div class="small text-secondary">Resolution: {{ item.resolution_notes }}</div>{% endif %}</td><td>{{ item.created_at.strftime('%Y-%m-%d') }}</td><td>{% if current_user.role == 'IT Manager' and item.status in ['Open','In Progress'] %}<form class="d-flex gap-1" method="post" action="{{ url_for('maintenance.update_request', request_id=item.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><select class="form-select form-select-sm" name="status"><option {% if item.status == 'Open' %}selected{% endif %}>In Progress</option><option>Resolved</option><option>Rejected</option></select><input class="form-control form-control-sm" name="resolution_notes" placeholder="Resolution"><button class="btn btn-sm btn-primary">Save</button></form>{% else %}<span class="status-badge status-{{ item.status|lower|replace(' ','-') }}">{{ item.status }}</span>{% endif %}</td></tr>{% else %}<tr><td colspan="5" class="empty-state">No service requests.</td></tr>{% endfor %}
+</tbody></table></div></section>
+{% endblock %}

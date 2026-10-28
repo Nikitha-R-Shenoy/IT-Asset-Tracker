@@ -1,0 +1,53 @@
+:root {
+  --navy: #142a43;
+  --ink: #1d2b3a;
+  --muted: #6b7786;
+  --line: #e8edf2;
+  --surface: #fff;
+  --canvas: #f5f7fa;
+  --blue: #2f6feb;
+}
+
+body { background: var(--canvas); color: var(--ink); font-family: Inter, "Segoe UI", Arial, sans-serif; }
+.app-navbar { background: var(--navy); box-shadow: 0 2px 12px #12223820; }
+.navbar-brand span { color: #a9c5ff; font-weight: 400; }
+.nav-link { color: #d3dce8 !important; font-size: .92rem; }
+.nav-link:hover { color: #fff !important; }
+.page-title { color: var(--navy); font-size: clamp(1.7rem, 3vw, 2.2rem); font-weight: 700; letter-spacing: -.035em; }
+.eyebrow { color: #718198; font-size: .7rem; font-weight: 700; letter-spacing: .13em; }
+.panel, .metric-card, .notice-card, .login-card { background: var(--surface); border: 1px solid var(--line); border-radius: .8rem; box-shadow: 0 5px 20px #19314d08; }
+.panel { overflow: hidden; }
+.panel-heading { align-items: center; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; padding: 1rem 1.25rem; }
+.metric-card { height: 100%; padding: 1.1rem 1.2rem; }
+.metric-label { color: var(--muted); display: block; font-size: .83rem; }
+.metric-value { font-size: 2rem; font-weight: 700; letter-spacing: -.04em; margin-top: .3rem; }
+.text-navy { color: var(--navy); } .text-green { color: #198754; } .text-blue { color: var(--blue); } .text-orange { color: #d78113; } .text-red { color: #c34646; }
+.notice-card { align-items: center; color: var(--ink); display: flex; gap: .9rem; min-height: 82px; padding: 1rem 1.2rem; text-decoration: none; }
+.notice-card:hover { border-color: #b7c8dd; color: var(--ink); }
+.notice-card small { color: var(--muted); display: block; margin-top: .15rem; }
+.notice-icon { align-items: center; background: #eaf1ff; border-radius: .7rem; color: #3267c8; display: flex; font-size: 1.25rem; height: 42px; justify-content: center; width: 42px; }
+.notice-icon.warning { background: #fff3dc; color: #c88018; }
+.table { --bs-table-bg: transparent; }
+.table thead th { background: #fafbfd; border-bottom-color: var(--line); color: #778496; font-size: .71rem; font-weight: 700; letter-spacing: .055em; padding: .85rem 1rem; text-transform: uppercase; white-space: nowrap; }
+.table tbody td { border-color: #edf0f4; padding: .85rem 1rem; }
+.table a { color: #245caa; text-decoration: none; } .table a:hover { text-decoration: underline; }
+.status-badge { border-radius: 999px; display: inline-block; font-size: .75rem; font-weight: 650; padding: .28rem .65rem; white-space: nowrap; }
+.status-available { background: #e4f5ea; color: #187241; }
+.status-assigned { background: #e5efff; color: #285db4; }
+.status-in-repair, .status-under-maintenance { background: #fff1dc; color: #a96508; }
+.status-retired, .status-rejected { background: #fde7e7; color: #a93737; }
+.status-open { background: #eaf1ff; color: #285db4; }
+.status-in-progress { background: #fff1dc; color: #a96508; }
+.status-resolved { background: #e4f5ea; color: #187241; }
+.empty-state { color: #788493; padding: 2.2rem !important; text-align: center; }
+.detail-label { color: var(--muted); font-size: .75rem; margin-bottom: .25rem; }
+.fw-medium { font-weight: 550; }
+.login-shell { align-items: center; display: flex; justify-content: center; min-height: calc(100vh - 190px); }
+.login-card { max-width: 470px; padding: 2.5rem; width: 100%; }
+.brand-mark { align-items: center; background: var(--navy); border-radius: .8rem; color: #fff; display: flex; font-size: 1.2rem; font-weight: 700; height: 46px; justify-content: center; margin-bottom: 1.25rem; width: 46px; }
+.error-card { margin: 8vh auto; max-width: 520px; padding: 3rem 1rem; text-align: center; }
+.error-card span { color: #a8b7c9; font-size: 4rem; font-weight: 750; letter-spacing: -.07em; }
+.error-card h1 { color: var(--navy); font-size: 1.8rem; }
+.error-card p { color: var(--muted); margin: .75rem auto 1.5rem; }
+.flash-stack { margin: 0 auto 1rem; max-width: 900px; }
+@media (max-width: 767.98px) { .login-card { padding: 1.5rem; } .panel-heading { align-items: flex-start; } }

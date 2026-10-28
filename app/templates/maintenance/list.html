@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Maintenance{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-end mb-4"><div><p class="eyebrow mb-1">LIFECYCLE</p><h1 class="page-title mb-1">Maintenance</h1><p class="text-secondary mb-0">Repair history, vendors, cost and completion.</p></div><a class="btn btn-outline-primary" href="{{ url_for('assets.index', status='In_Repair') }}">Find assets in repair</a></div>
+<section class="panel"><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Asset</th><th>Issue</th><th>Vendor</th><th>Repair cost</th><th>Started</th><th>Status</th><th></th></tr></thead><tbody>
+{% for item in records %}<tr><td><a href="{{ url_for('assets.detail', asset_id=item.asset_id) }}" class="fw-semibold">{{ item.asset.asset_tag }}</a></td><td>{{ item.issue_description }}</td><td>{{ item.service_vendor or '—' }}</td><td>{{ item.repair_cost }}</td><td>{{ item.started_at.strftime('%Y-%m-%d') }}</td><td>{{ 'Completed' if item.completed_at else 'Open' }}</td><td>{% if not item.completed_at %}<form class="d-flex gap-1" method="post" action="{{ url_for('maintenance.complete', record_id=item.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><select class="form-select form-select-sm" name="outcome"><option>Available</option><option>In_Repair</option></select><button class="btn btn-sm btn-primary">Complete</button></form>{% endif %}</td></tr>{% else %}<tr><td colspan="7" class="empty-state">No maintenance records.</td></tr>{% endfor %}
+</tbody></table></div></section>
+{% endblock %}
