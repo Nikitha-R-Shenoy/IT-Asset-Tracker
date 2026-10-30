@@ -4,7 +4,15 @@ from datetime import date
 import pytest
 
 from app.extensions import db
-from app.models import Allocation, Asset, AuditLog, Employee, Maintenance, ServiceRequest
+from app.models import (
+    Allocation,
+    Asset,
+    AuditLog,
+    Employee,
+    Maintenance,
+    ServiceRequest,
+    User,
+)
 from app import create_app
 from tests.conftest import login
 
@@ -342,3 +350,180 @@ def test_csrf_is_required_for_post_forms():
         data={"email": "admin@example.test", "password": "irrelevant"},
     )
     assert response.status_code == 400
+
+
+def _create_active_allocation(app):
+    with app.app_context():
+        asset = Asset.query.filter_by(asset_tag="NSTAR-LP-0100").one()
+        employee = Employee.query.filter_by(employee_number="EMP-001").one()
+        manager = User.query.filter_by(role="IT Manager").one()
+        allocation = Allocation(
+            asset=asset,
+            employee=employee,
+            assigned_by=manager,
+        )
+        asset.status = "Assigned"
+        db.session.add(allocation)
+        db.session.commit()
+        return allocation.id
+
+
+def test_admin_can_view_assignments_without_return_actions(client, app):
+    allocation_id = _create_active_allocation(app)
+    login(client, "admin@example.test", "Admin-Test-Password-123!")
+
+    assignments = client.get("/allocations")
+    assert assignments.status_code == 200
+    assert b"NSTAR-LP-0100" in assignments.data
+    assert b"Record return" not in assignments.data
+    assert b"Record return" not in client.get("/assets/1").data
+    assert client.get(f"/allocations/{allocation_id}/return").status_code == 403
+    assert client.post(
+        f"/assets/allocation/{allocation_id}/return",
+        data={"condition": "Good"},
+    ).status_code == 403
+
+    with app.app_context():
+        allocation = db.session.get(Allocation, allocation_id)
+        assert allocation.return_date is None
+        assert db.session.get(Asset, allocation.asset_id).status == "Assigned"
+        assert AuditLog.query.filter_by(action="asset.return").count() == 0
+
+
+def test_it_manager_can_view_and_process_assignment_return(client, app):
+    allocation_id = _create_active_allocation(app)
+    login(client)
+
+    assignments = client.get("/allocations")
+    assert assignments.status_code == 200
+    assert f"/allocations/{allocation_id}/return".encode() in assignments.data
+    assert client.get(f"/allocations/{allocation_id}/return").status_code == 200
+    response = client.post(
+        f"/allocations/{allocation_id}/return",
+        data={"condition": "Good", "notes": "Returned in working order"},
+    )
+    assert response.status_code == 302
+
+    with app.app_context():
+        allocation = db.session.get(Allocation, allocation_id)
+        assert allocation.return_date is not None
+        assert allocation.return_condition == "Good"
+        assert db.session.get(Asset, allocation.asset_id).status == "Available"
+        assert AuditLog.query.filter_by(action="asset.return").count() == 1
+
+
+def test_it_manager_repairs_damaged_return_and_reassigns_asset(client, app):
+    login(client)
+    with app.app_context():
+        employee_id = Employee.query.filter_by(employee_number="EMP-001").one().id
+    initial_assignment = client.post(
+        "/assets/assign",
+        data={"asset_id": 1, "employee_id": employee_id},
+    )
+    assert initial_assignment.status_code == 302
+
+    with app.app_context():
+        allocation_id = Allocation.query.filter_by(
+            asset_id=1, return_date=None
+        ).one().id
+    damaged_return = client.post(
+        f"/allocations/{allocation_id}/return",
+        data={"condition": "Damaged", "notes": "Needs repair"},
+    )
+    assert damaged_return.status_code == 302
+    with app.app_context():
+        assert db.session.get(Asset, 1).status == "In_Repair"
+
+    start_page = client.get("/maintenance/start/1")
+    assert start_page.status_code == 200
+    start_response = client.post(
+        "/maintenance/start/1",
+        data={
+            "issue_description": "Replace damaged display",
+            "service_vendor": "Northstar Service",
+            "repair_cost": "125.50",
+        },
+    )
+    assert start_response.status_code == 302
+    with app.app_context():
+        asset = db.session.get(Asset, 1)
+        maintenance = Maintenance.query.filter_by(asset_id=1).one()
+        maintenance_id = maintenance.id
+        assert asset.status == "Under_Maintenance"
+        assert maintenance.completed_at is None
+
+    maintenance_page = client.get("/maintenance")
+    assert maintenance_page.status_code == 200
+    assert f'action="/maintenance/{maintenance_id}/complete"'.encode() in (
+        maintenance_page.data
+    )
+    completion = client.post(
+        f"/maintenance/{maintenance_id}/complete",
+        data={"outcome": "Available", "notes": "Display replaced and tested"},
+    )
+    assert completion.status_code == 302
+
+    with app.app_context():
+        asset = db.session.get(Asset, 1)
+        maintenance = db.session.get(Maintenance, maintenance_id)
+        assert asset.status == "Available"
+        assert maintenance.completed_at is not None
+        assert maintenance.completion_notes == "Display replaced and tested"
+        assert AuditLog.query.filter_by(action="maintenance.started").count() == 1
+        assert AuditLog.query.filter_by(action="maintenance.completed").count() == 1
+
+    reassignment = client.post(
+        "/assets/assign",
+        data={"asset_id": 1, "employee_id": employee_id},
+    )
+    assert reassignment.status_code == 302
+    with app.app_context():
+        assert db.session.get(Asset, 1).status == "Assigned"
+        assert Allocation.query.filter_by(asset_id=1, return_date=None).count() == 1
+        assert Maintenance.query.filter_by(asset_id=1).count() == 1
+
+
+@pytest.mark.parametrize(
+    ("asset_status", "with_active_assignment", "outcome"),
+    [
+        ("Under_Maintenance", True, "Available"),
+        ("Retired", False, "Available"),
+        ("Under_Maintenance", False, "Unknown"),
+    ],
+)
+def test_invalid_maintenance_completion_preserves_records(
+    client, app, asset_status, with_active_assignment, outcome
+):
+    with app.app_context():
+        asset = db.session.get(Asset, 1)
+        manager = User.query.filter_by(role="IT Manager").one()
+        employee = Employee.query.filter_by(employee_number="EMP-001").one()
+        asset.status = asset_status
+        if with_active_assignment:
+            db.session.add(
+                Allocation(asset=asset, employee=employee, assigned_by=manager)
+            )
+        record = Maintenance(
+            asset=asset,
+            created_by=manager,
+            issue_description="Existing repair",
+        )
+        db.session.add(record)
+        db.session.commit()
+        maintenance_id = record.id
+
+    login(client)
+    response = client.post(
+        f"/maintenance/{maintenance_id}/complete",
+        data={"outcome": outcome},
+    )
+    assert response.status_code == 302
+    with app.app_context():
+        asset = db.session.get(Asset, 1)
+        record = db.session.get(Maintenance, maintenance_id)
+        assert asset.status == asset_status
+        assert record.completed_at is None
+        assert AuditLog.query.filter_by(action="maintenance.completed").count() == 0
+        assert Allocation.query.filter_by(asset_id=1, return_date=None).count() == (
+            1 if with_active_assignment else 0
+        )

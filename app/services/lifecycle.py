@@ -121,6 +121,17 @@ def complete_maintenance(record_id, actor, outcome="Available", notes=None):
     asset = db.session.execute(
         select(Asset).where(Asset.id == record.asset_id).with_for_update()
     ).scalar_one()
+    if asset.status == "Retired":
+        raise ValueError("Retired assets cannot be returned to service.")
+    if asset.status not in {"In_Repair", "Under_Maintenance"}:
+        raise ValueError("Asset is not in repair or maintenance.")
+    active_allocation_id = db.session.execute(
+        select(Allocation.id)
+        .where(Allocation.asset_id == asset.id, Allocation.return_date.is_(None))
+        .limit(1)
+    ).scalar_one_or_none()
+    if active_allocation_id is not None:
+        raise ValueError("Return the asset before completing maintenance.")
     validate_transition(asset.status, outcome)
     try:
         record.completed_at = datetime.utcnow()

@@ -16,7 +16,7 @@
   </div>{% if asset.notes %}<hr><div class="detail-label">Notes</div><p class="mb-0">{{ asset.notes }}</p>{% endif %}</section></div>
   <div class="col-lg-4"><section class="panel p-4 h-100"><h2 class="h5 mb-3">Lifecycle actions</h2>
     {% set active = asset.allocations|selectattr('return_date', 'none')|first %}
-    {% if active %}<p class="small text-secondary mb-1">Currently assigned to</p><p class="fw-semibold">{{ active.employee.full_name }}</p><a class="btn btn-sm btn-outline-primary" href="{{ url_for('allocations.return_item', allocation_id=active.id) }}">Record return</a>{% else %}<p class="text-secondary">No active employee allocation.</p>{% endif %}
+    {% if active %}<p class="small text-secondary mb-1">Currently assigned to</p><p class="fw-semibold">{{ active.employee.full_name }}</p>{% if current_user.role == 'IT Manager' %}<a class="btn btn-sm btn-outline-primary" href="{{ url_for('allocations.return_item', allocation_id=active.id) }}">Record return</a>{% endif %}{% else %}<p class="text-secondary">No active employee allocation.</p>{% endif %}
     <p class="small text-secondary mt-4 mb-0">Created {{ asset.created_at.strftime('%Y-%m-%d') }}</p>
   </section></div>
 </div>
