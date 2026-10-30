@@ -53,6 +53,7 @@ id_ed25519
 credentials.json
 credentials.yml
 credentials.yaml
+reset_manager_password.py
 .aws/
 .ssh/
 
