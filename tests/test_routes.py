@@ -1,5 +1,5 @@
 import io
-from datetime import date
+from datetime import date, datetime, timedelta
 
 import pytest
 
@@ -94,6 +94,65 @@ def test_manager_dashboard_and_inventory_pages_render(client):
     assert client.get("/assets/1").status_code == 200
     assert client.get("/employees").status_code == 200
     assert client.get("/reports?type=inventory").status_code == 200
+
+
+def test_dashboard_shows_latest_registered_assets_and_details(client, app):
+    with app.app_context():
+        employee = Employee.query.filter_by(employee_number="EMP-001").one()
+        manager = User.query.filter_by(role="IT Manager").one()
+        assets = []
+        for index in range(7):
+            asset = Asset(
+                asset_tag=f"DASH-RECENT-{index}",
+                serial_number=f"DASH-SERIAL-{index}",
+                category=f"Dashboard Category {index}",
+                manufacturer="Northstar",
+                model=f"Dashboard Model {index}",
+                purchase_date=date(2024, 1, 1),
+                purchase_cost=1000,
+                salvage_value=0,
+                useful_life_years=5,
+                status="Assigned" if index == 6 else "Available",
+                created_at=datetime(2030, 1, 1) + timedelta(days=index),
+            )
+            assets.append(asset)
+        db.session.add_all(assets)
+        db.session.flush()
+        db.session.add(
+            Allocation(
+                asset=assets[6],
+                employee=employee,
+                assigned_by=manager,
+            )
+        )
+        db.session.commit()
+
+    login(client)
+    response = client.get("/dashboard")
+    assert response.status_code == 200
+    page = response.get_data(as_text=True)
+    assert "No assets found." not in page
+    assert "Dashboard Category 6" in page
+    assert "Dashboard Model 6" in page
+    assert "Asha Rao" in page
+    assert "Assigned" in page
+
+    displayed_tags = [f"DASH-RECENT-{index}" for index in reversed(range(1, 7))]
+    positions = [page.index(tag) for tag in displayed_tags]
+    assert positions == sorted(positions)
+    assert "DASH-RECENT-0" not in page
+
+
+def test_dashboard_shows_empty_state_only_when_inventory_is_empty(client, app):
+    with app.app_context():
+        asset = Asset.query.one()
+        db.session.delete(asset)
+        db.session.commit()
+
+    login(client)
+    response = client.get("/dashboard")
+    assert response.status_code == 200
+    assert "No assets found." in response.get_data(as_text=True)
 
 
 @pytest.mark.parametrize(

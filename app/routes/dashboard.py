@@ -55,7 +55,7 @@ def index():
     return render_template(
         "dashboard/index.html",
         counts=counts,
-        recent_assets=recent_assets,
+        assets=recent_assets,
         open_requests=open_requests,
         expiring=expiring,
     )
